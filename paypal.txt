@@ -1,0 +1,7 @@
+paypal
+
+app : eventnceleb
+client ID : AdI_CfAsHTJKThj4v_Gog7COwitTMaCd_osV5pDwrTZ2omty4GTJcUAHY66-waJl9lQJu2z7bptqt4O4
+
+secrete : 
+EK3zQbWst1X0aVn7YqLUFsKSKP4OdrjXrIQLWU9QvG9MPR4Gn0dl_VlA9fmnV7l_X-4gCTcY16CIC-GF

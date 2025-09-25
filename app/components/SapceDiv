@@ -1,0 +1,16 @@
+import React from 'react'
+
+type Props = {}
+
+const SapceDiv = (props: Props) => {
+  return (
+    <div>SapceDiv</div>
+    kdflska
+    sdafkasdl
+    
+  )
+}
+
+export default SapceDiv
+
+

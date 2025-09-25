@@ -1,0 +1,106 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import type { EventDetails } from "../types/types";
+import ImageUploader from "./ImageUploader";
+
+type Props = {
+  details: EventDetails;
+  imageUrl: string;
+  setImageUrl: (url: string) => void;
+  useBackground: boolean;
+  setUseBackground: (value: boolean) => void;
+};
+
+const WeddingInvitationPreview = ({
+  details,
+  imageUrl,
+  setImageUrl,
+  useBackground,
+  setUseBackground,
+}: Props) => {
+  const {
+    groomFirst,
+    groomLast,
+    brideFirst,
+    brideLast,
+    groomParents,
+    brideParents,
+    date,
+    time,
+    venue,
+    address,
+  } = details;
+
+  return (
+    <div className="flex flex-col md:flex-row gap-4 max-w-5xl mx-auto">
+      <div
+        className={`flex-1 rounded-xl shadow-lg overflow-hidden p-6 text-center space-y-4 border border-gray-300 ${
+          useBackground ? "bg-cover bg-center text-white" : "bg-white"
+        }`}
+        style={
+          useBackground && imageUrl
+            ? { backgroundImage: `url(${imageUrl})` }
+            : {}
+        }
+      >
+        {!useBackground && imageUrl && (
+          <div className="w-full h-64 relative">
+            <Image
+              src={imageUrl}
+              alt="Invitation Background"
+              layout="fill"
+              objectFit="cover"
+              className="rounded-t-xl"
+            />
+          </div>
+        )}
+
+        <h2 className="text-2xl font-bold text-black">הזמנה לחתונה</h2>
+        <p className="text-lg font-medium">
+          {groomFirst} {groomLast} & {brideFirst} {brideLast}
+        </p>
+        <p className="text-sm text-gray-700">
+          ילדי {groomParents} ו־{brideParents}
+        </p>
+        <p className="text-md mt-2">
+          מתכבדים להזמינכם לחגוג עימנו את יום נישואינו
+        </p>
+        <p className="font-semibold text-black">
+          {date} בשעה {time}
+        </p>
+        <p className="text-gray-700">באולם {venue}</p>
+        <p className="text-gray-600">{address}</p>
+      </div>
+
+      {/* 🖼️ כפתורי שליטה מתחת */}
+      <div className="flex flex-col gap-2">
+        <ImageUploader
+          onUploaded={(url) => {
+            setImageUrl(url);
+            setUseBackground(true); // הפעלת רקע אוטומטית
+          }}
+          previousImagePath={
+            imageUrl?.includes("/storage/v1/object/public/event-images/")
+              ? imageUrl.split("/event-images/")[1]
+              : undefined
+          }
+        />
+        {imageUrl && (
+          <button
+            onClick={() => {
+              setImageUrl("");
+              setUseBackground(false);
+            }}
+            className="text-red-600 underline text-sm"
+          >
+            הסר תמונה
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default WeddingInvitationPreview;
