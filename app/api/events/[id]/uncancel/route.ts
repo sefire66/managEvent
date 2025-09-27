@@ -4,12 +4,12 @@ import { connectToDatabase } from "@/lib/mongodb";
 import Event from "@/models/Event";
 import { EventDetails } from "@/app/types/types";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: Request, context: any) {
   await connectToDatabase();
-  const { id } = params;
+
+  // חילוץ ה-id בצורה ישירה מה-context כדי לעקוף את קונפליקט הטיפוסים
+  const { id } = (context?.params ?? {}) as { id: string };
+
   const { ownerEmail } = await req.json();
 
   // (אופציונלי אך מומלץ) בדוק שאין כבר אירוע פעיל באותו תאריך/סוג/בעלים

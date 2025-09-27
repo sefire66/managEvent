@@ -8,19 +8,23 @@ type SearchParams = {
   b?: string | string[]; // bullets: אפשר להופיע כמה פעמים ?b=...
 };
 
-export default function Page({ searchParams }: { searchParams: SearchParams }) {
-  const normalize = (v: string | string[] | undefined) =>
-    Array.isArray(v) ? v[0] : v || "";
+type PageProps = {
+  // בהתאם לטיפוסים שנוצרים אצלך ב-.next/types: Promise בלבד (או undefined)
+  searchParams?: Promise<SearchParams>;
+};
 
-  const title = normalize(searchParams.title) || "ברוכים הבאים לאירוע";
-  const subtitle = normalize(searchParams.subtitle) || "";
-  const qrSrc = normalize(searchParams.qrSrc) || "";
+const normalize = (v?: string | string[]) =>
+  Array.isArray(v) ? v[0] : (v ?? "");
 
-  const bulletsRaw = searchParams.b
-    ? Array.isArray(searchParams.b)
-      ? searchParams.b
-      : [searchParams.b]
-    : [];
+export default async function Page({ searchParams }: PageProps) {
+  // searchParams יכול להיות undefined או Promise<SearchParams>
+  const sp: SearchParams = searchParams ? await searchParams : {};
+
+  const title = normalize(sp.title) || "ברוכים הבאים לאירוע";
+  const subtitle = normalize(sp.subtitle) || "";
+  const qrSrc = normalize(sp.qrSrc) || "";
+
+  const bulletsRaw = sp.b ? (Array.isArray(sp.b) ? sp.b : [sp.b]) : [];
   const bullets = bulletsRaw.map((s) => s.trim()).filter(Boolean);
 
   return (

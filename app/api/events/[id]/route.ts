@@ -41,13 +41,11 @@ type EventLean = {
 };
 
 // ---------- GET: קבלת אירוע כולל preferences ----------
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
-  const eventId = params.id;
+export async function GET(_req: Request, context: any) {
+  // חילוץ id תוך עקיפת קונפליקט טיפוסים גלובלי
+  const { id: eventId } = (context?.params ?? {}) as { id: string };
 
-  if (!mongoose.Types.ObjectId.isValid(eventId)) {
+  if (!eventId || !mongoose.Types.ObjectId.isValid(eventId)) {
     return NextResponse.json({ error: "מזהה אירוע לא תקין" }, { status: 400 });
   }
 
@@ -92,7 +90,6 @@ export async function GET(
       wazeLink: ev.wazeLink ?? "",
       isCanceled: ev.isCanceled ?? false,
       cancelReason: ev.cancelReason ?? "",
-
       preferences: prefs,
     };
 
@@ -107,13 +104,10 @@ export async function GET(
 }
 
 // ---------- PATCH: עדכון נקודתי של preferences ----------
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const eventId = params.id;
+export async function PATCH(req: Request, context: any) {
+  const { id: eventId } = (context?.params ?? {}) as { id: string };
 
-  if (!mongoose.Types.ObjectId.isValid(eventId)) {
+  if (!eventId || !mongoose.Types.ObjectId.isValid(eventId)) {
     return NextResponse.json({ error: "מזהה אירוע לא תקין" }, { status: 400 });
   }
 
@@ -183,13 +177,15 @@ export async function PATCH(
   }
 }
 
-// ---------- DELETE: מחיקת אירוע והמידע הקשור (כמו אצלך) ----------
-export async function DELETE(
-  _req: Request,
-  context: { params: { id: string } }
-) {
+// ---------- DELETE: מחיקת אירוע והמידע הקשור ----------
+export async function DELETE(_req: Request, context: any) {
+  const { id: eventId } = (context?.params ?? {}) as { id: string };
+
+  if (!eventId || !mongoose.Types.ObjectId.isValid(eventId)) {
+    return NextResponse.json({ error: "מזהה אירוע לא תקין" }, { status: 400 });
+  }
+
   await connectToDatabase();
-  const { id: eventId } = context.params;
 
   try {
     const tablesResult = await Table.deleteMany({ eventId });

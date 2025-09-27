@@ -1,12 +1,15 @@
+// app/api/guest/[id]/sms/route.ts
 import { connectToDatabase } from "@/lib/mongodb";
 import Guest from "@/models/Guest";
+import mongoose from "mongoose";
 import { NextResponse } from "next/server";
-export const PATCH = async (
-  req: Request,
-  { params }: { params: { id: string } }
-) => {
-  const id = params.id;
-  console.log("📦 Received params:", params);
+
+export async function PATCH(req: Request, context: any) {
+  const { id } = (context?.params ?? {}) as { id: string };
+
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Invalid guest id" }, { status: 400 });
+  }
 
   try {
     await connectToDatabase();
@@ -20,7 +23,6 @@ export const PATCH = async (
     );
 
     if (result.modifiedCount === 1) {
-      console.log("✅ Updated guest SMS info:", id);
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json({ error: "Guest not found" }, { status: 404 });
@@ -29,4 +31,4 @@ export const PATCH = async (
     console.error("❌ Update guest SMS info failed:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-};
+}

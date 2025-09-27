@@ -2,6 +2,17 @@
 import * as XLSX from "xlsx";
 import type { Guest } from "../types/types";
 
+const ALLOWED_STATUS = new Set<Guest["status"]>([
+  "לא ענה",
+  "בא",
+  "לא בא",
+  "אולי",
+]);
+const normalizeStatus = (v: unknown): Guest["status"] => {
+  const s = String(v ?? "").trim() as Guest["status"];
+  return ALLOWED_STATUS.has(s) ? s : "לא ענה";
+};
+
 const GuestUploader = ({
   onUpload,
 }: {
@@ -19,14 +30,14 @@ const GuestUploader = ({
       const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: "" }) as any[];
 
       const guests: Guest[] = jsonData.map((row) => ({
-        id: row["UUID"] || crypto.randomUUID(),
-        phone: row["טלפון"] || "",
-        name: row["שם"] || "",
-        status: row["סטטוס"] || "לא ענה",
-        table: row["שולחן"] || "",
-        count: row["כמות"]?.toString() || "0",
-        smsCount: 0, // default value
-        lastSms: "",
+        _id: row["UUID"] || crypto.randomUUID(),
+        phone: String(row["טלפון"] ?? "").trim(),
+        name: String(row["שם"] ?? "").trim(),
+        status: normalizeStatus(row["סטטוס"]), // ← מצמצם ל־union
+        table: String(row["שולחן"] ?? "").trim(),
+        count: Number.isFinite(Number(row["כמות"])) ? Number(row["כמות"]) : 0,
+        smsCount: 0,
+        lastSms: "", // אם צריך תאריך: new Date().toISOString()
       }));
 
       onUpload(guests);

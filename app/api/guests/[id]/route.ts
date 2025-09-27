@@ -1,21 +1,20 @@
+// app/api/guests/[id]/route.ts
 import { connectToDatabase } from "@/lib/mongodb";
 import Guest from "@/models/Guest";
+import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
 const ALLOWED_STATUS = new Set(["לא ענה", "בא", "לא בא", "אולי"]);
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const id = params?.id;
+export async function PATCH(req: Request, context: any) {
+  const { id } = (context?.params ?? {}) as { id: string };
 
   try {
     await connectToDatabase();
 
-    if (!id) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
-        { error: "חסר מזהה אורח (_id)" },
+        { error: "מזהה אורח (_id) לא תקין או חסר" },
         { status: 400 }
       );
     }
@@ -35,7 +34,7 @@ export async function PATCH(
       }
       update.status = status;
 
-      // הגנה עסקית: אם הסטטוס אינו "בא" – מאפסים count ושולחן
+      // אם הסטטוס אינו "בא" – מאפסים count ושולחן
       if (status !== "בא") {
         update.count = 0;
         update.table = "";
@@ -58,7 +57,7 @@ export async function PATCH(
       );
     }
 
-    // (אופציונלי אך מומלץ) לוודא שייך לאותו eventId כדי למנוע עדכון צולב אירועים
+    // מומלץ לסנן לפי eventId אם הגיע — כדי למנוע עדכון צולב אירועים
     const filter: Record<string, any> = { _id: id };
     if (eventId) filter.eventId = eventId;
 

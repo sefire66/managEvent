@@ -13,14 +13,13 @@ function baseUrlFromHeaders(req: Request) {
   return `${proto}://${host}`;
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: { token: string } }
-) {
+export async function POST(req: Request, context: any) {
   try {
     await connectToDatabase();
 
-    const token = params.token;
+    // חילוץ ה-token תוך עקיפת קונפליקט הטיפוסים
+    const { token } = (context?.params ?? {}) as { token: string };
+
     const body = await req.json().catch(() => ({}));
 
     const to: string | undefined = body?.to;

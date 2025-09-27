@@ -7,18 +7,17 @@ import PaymentRequest from "@/models/PaymentRequest";
 import BillingProfile from "@/models/BillingProfile";
 import User from "@/models/User";
 
-export async function GET(
-  req: Request,
-  { params }: { params: { token: string } }
-) {
+export async function GET(req: Request, context: any) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const token = params.token?.trim();
-    if (!token) {
+    // חילוץ token תוך עקיפת קונפליקט הטיפוסים
+    const { token } = (context?.params ?? {}) as { token: string };
+    const safeToken = token?.trim();
+    if (!safeToken) {
       return NextResponse.json({ error: "invalid token" }, { status: 400 });
     }
 
@@ -34,7 +33,7 @@ export async function GET(
     const isAdmin = me.role === "admin" || me.role === "super-admin";
 
     const pr = await PaymentRequest.findOne(
-      { token },
+      { token: safeToken },
       { _id: 1, ownerUserId: 1, createdBy: 1 }
     );
     if (!pr) {

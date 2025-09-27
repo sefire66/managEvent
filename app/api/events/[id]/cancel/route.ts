@@ -7,13 +7,13 @@ import { ScheduledSms } from "@/models/ScheduledSms";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } } // ← אין צורך ב-Promise כאן
-) {
-  const { id } = params;
+export async function POST(req: Request, context: any) {
+  // עוקפים קונפליקט טיפוסים גלובלי: מוציאים את id בצורה ידנית מ-context
+  const { id } = (context?.params ?? {}) as { params?: { id: string } } as {
+    id: string;
+  };
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
+  if (!id || !mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ error: "מזהה אירוע לא תקין" }, { status: 400 });
   }
 
@@ -29,7 +29,7 @@ export async function POST(
   }
 
   const session = await mongoose.startSession();
-  session.startTransaction();
+  await session.startTransaction();
 
   try {
     // 1) מוצאים את האירוע במסגרת הטרנזקציה
@@ -39,9 +39,8 @@ export async function POST(
     }
 
     // אם כבר בוטל — נסיים יפה (לא ניגע בתיזמונים שוב)
-    if (event.isCanceled) {
+    if ((event as any).isCanceled) {
       await session.commitTransaction();
-      session.endSession();
       return NextResponse.json(
         {
           ok: true,
@@ -54,14 +53,14 @@ export async function POST(
     }
 
     // 2) מסמנים את האירוע כמבוטל
-    event.isCanceled = true;
+    (event as any).isCanceled = true;
     (event as any).canceledAt = new Date();
     if (typeof reason === "string" && reason.trim()) {
       (event as any).cancelReason = reason.trim();
     }
     await event.save({ session });
 
-    // 3) מוחקים את כל התיזמונים של האירוע (מומלץ לסנן גם לפי ownerEmail)
+    // 3) מוחקים את כל התיזמונים של האירוע (מסונן גם לפי ownerEmail)
     const delRes = await ScheduledSms.deleteMany(
       { eventId: String(id), ownerEmail },
       { session }
@@ -69,7 +68,6 @@ export async function POST(
 
     // 4) סוגרים טרנזקציה
     await session.commitTransaction();
-    session.endSession();
 
     // 5) מחזירים את האירוע המעודכן + כמה נמחקו
     const updated = await Event.findById(id).lean();
@@ -83,10 +81,11 @@ export async function POST(
     );
   } catch (err: any) {
     await session.abortTransaction();
-    session.endSession();
     return NextResponse.json(
-      { ok: false, error: err.message },
+      { ok: false, error: err?.message ?? "Unknown error" },
       { status: 400 }
     );
+  } finally {
+    session.endSession();
   }
 }

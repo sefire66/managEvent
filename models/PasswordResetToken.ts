@@ -12,13 +12,12 @@ const PasswordResetTokenSchema = new mongoose.Schema({
   tokenHash: {
     type: String,
     required: true,
-    unique: true,
-    index: true,
+    unique: true, // unique יוצר אינדקס בפני עצמו, אין צורך גם index:true
   },
   expiresAt: {
     type: Date,
     required: true,
-    index: true,
+    // index: true  ← להסיר כדי לא ליצור כפילות עם ה-TTL למטה
   },
   used: {
     type: Boolean,
@@ -30,7 +29,7 @@ const PasswordResetTokenSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// TTL Index – מסמכים יימחקו אוטומטית אחרי התפוגה
+// TTL Index – מחיקה אוטומטית אחרי התפוגה (אינדקס יחיד על expiresAt)
 PasswordResetTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default mongoose.models.PasswordResetToken ||
