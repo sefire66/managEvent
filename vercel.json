@@ -1,5 +1,5 @@
 {
   "crons": [
-    { "path": "/api/cron/scheduled-sms", "schedule": "*/1 * * * *" }
+    { "path": "/api/cron/scheduled-sms", "schedule": "0 9 * * *" }
   ]
 }

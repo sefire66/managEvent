@@ -26,7 +26,8 @@ export default function Pricing() {
       /> */}
 
       {/* <h1 className="text-4xl font-bold mb-8">מחירים</h1> */}
-      <PricingComponent />
+
+      {/* <PricingComponent /> */}
       <PackagesViaI4U />
     </div>
   );
